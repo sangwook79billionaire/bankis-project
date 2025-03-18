@@ -11,15 +11,13 @@ export async function GET() {
 
     const kisService = new KISService(config);
     
-    // 테스트를 위한 간단한 응답
-    return NextResponse.json({ 
-      message: 'API 연결 테스트',
-      config: {
-        appKey: config.appKey?.substring(0, 5) + '...',
-        appSecret: config.appSecret?.substring(0, 5) + '...',
-        accountNumber: config.accountNumber?.substring(0, 5) + '...'
-      }
+    // ELW 종목 목록 조회
+    const elwList = await kisService.getELWList({
+      FID_COND_MRKT_DIV_CODE: 'J', // 주식
+      FID_ELW_WRNT_TYPE_CODE: '01' // 콜
     });
+
+    return NextResponse.json(elwList);
 
   } catch (error) {
     console.error('API 호출 중 오류 발생:', error);
