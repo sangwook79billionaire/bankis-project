@@ -18,6 +18,7 @@ class KISService {
   private static lastTokenRequestTime: number | null = null;
   private readonly TOKEN_REQUEST_INTERVAL = 180 * 1000; // 3분
   private readonly TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5분
+  private readonly API_TIMEOUT = 30000; // 30초
 
   constructor(config: KISConfig) {
     this.config = config;
@@ -69,7 +70,8 @@ class KISService {
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
-          }
+          },
+          timeout: this.API_TIMEOUT
         }
       );
 
@@ -85,14 +87,20 @@ class KISService {
 
       return KISService.tokenInfo.token;
     } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 403) {
-        console.error('토큰 발급 중 오류 발생:', error.message);
-        console.error('에러 응답:', error.response.data);
-        
-        // 토큰 발급 제한 에러인 경우 재시도
-        console.log('토큰 발급 제한으로 3분 대기 후 재시도');
-        await this.delay(this.TOKEN_REQUEST_INTERVAL);
-        return this.refreshToken();
+      if (axios.isAxiosError(error)) {
+        if (error.code === 'ECONNABORTED') {
+          console.error('토큰 발급 요청 시간 초과');
+          throw new Error('토큰 발급 요청 시간 초과');
+        }
+        if (error.response?.status === 403) {
+          console.error('토큰 발급 중 오류 발생:', error.message);
+          console.error('에러 응답:', error.response.data);
+          
+          // 토큰 발급 제한 에러인 경우 재시도
+          console.log('토큰 발급 제한으로 3분 대기 후 재시도');
+          await this.delay(this.TOKEN_REQUEST_INTERVAL);
+          return this.refreshToken();
+        }
       }
       throw error;
     }
@@ -121,12 +129,21 @@ class KISService {
         lastError = error as Error;
         console.error(`작업 실패 (시도 ${i + 1}/${maxRetries}):`, error);
         
-        if (axios.isAxiosError(error) && error.response?.status === 401) {
-          // 토큰 만료된 경우에만 토큰 갱신
-          KISService.tokenInfo = null;
-          if (i < maxRetries - 1) {
-            await this.delay(1000);
-            continue;
+        if (axios.isAxiosError(error)) {
+          if (error.code === 'ECONNABORTED') {
+            console.error('API 요청 시간 초과');
+            if (i < maxRetries - 1) {
+              await this.delay(1000);
+              continue;
+            }
+          }
+          if (error.response?.status === 401) {
+            // 토큰 만료된 경우에만 토큰 갱신
+            KISService.tokenInfo = null;
+            if (i < maxRetries - 1) {
+              await this.delay(1000);
+              continue;
+            }
           }
         }
         throw error;
@@ -159,7 +176,8 @@ class KISService {
             tr_id: tr_id,
             custtype: 'P'
           },
-          params: params
+          params: params,
+          timeout: this.API_TIMEOUT
         }
       );
 
@@ -190,7 +208,8 @@ class KISService {
             tr_id: tr_id,
             custtype: 'P'
           },
-          params: params
+          params: params,
+          timeout: this.API_TIMEOUT
         }
       );
 
@@ -232,7 +251,8 @@ class KISService {
             PRCS_DVSN: '01', // 처리구분
             CTX_AREA_FK100: '', // 연속조회검색조건
             CTX_AREA_NK100: '' // 연속조회키
-          }
+          },
+          timeout: this.API_TIMEOUT
         }
       );
 

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import KISService from '@/services/kisService';
 
+export const maxDuration = 60; // 60초 타임아웃
+
 export async function GET() {
   try {
     const config = {
@@ -39,12 +41,15 @@ export async function GET() {
       return NextResponse.json(elwList);
     } catch (apiError) {
       console.error('KIS API 호출 중 오류:', apiError);
+      const errorMessage = apiError instanceof Error ? apiError.message : '알 수 없는 오류';
+      const status = errorMessage.includes('시간 초과') ? 504 : 500;
+      
       return NextResponse.json(
         { 
           error: 'KIS API 호출 중 오류가 발생했습니다.',
-          details: apiError instanceof Error ? apiError.message : '알 수 없는 오류'
+          details: errorMessage
         },
-        { status: 500 }
+        { status }
       );
     }
 
