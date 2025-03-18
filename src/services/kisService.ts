@@ -18,7 +18,7 @@ class KISService {
   private static lastTokenRequestTime: number | null = null;
   private readonly TOKEN_REQUEST_INTERVAL = 180 * 1000; // 3분
   private readonly TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // 5분
-  private readonly API_TIMEOUT = 30000; // 30초
+  private readonly API_TIMEOUT = 60000; // 60초
 
   constructor(config: KISConfig) {
     this.config = config;

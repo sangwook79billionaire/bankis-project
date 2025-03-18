@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import KISService from '@/services/kisService';
 
-export const maxDuration = 60; // 60초 타임아웃
+export const runtime = 'edge';
+export const maxDuration = 300; // 5분 타임아웃
 
 export async function GET() {
   try {
