@@ -1,3 +1,5 @@
+'use client'
+
 import { ModuleCard } from "./ModuleCard"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"

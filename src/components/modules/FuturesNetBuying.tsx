@@ -1,3 +1,5 @@
+'use client'
+
 import { ModuleCard } from "./ModuleCard"
 import {
   BarChart,

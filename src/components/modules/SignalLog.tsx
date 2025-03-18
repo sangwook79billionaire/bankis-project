@@ -1,3 +1,5 @@
+'use client'
+
 import { ModuleCard } from "./ModuleCard"
 import { Card, CardContent } from "@/components/ui/card"
 
